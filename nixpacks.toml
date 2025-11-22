@@ -1,0 +1,9 @@
+# Nixpacks configuration for Railway.app
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "ffmpeg", "python3", "python3Packages.pip"]
+
+[phases.install]
+cmds = ["pip3 install yt-dlp", "npm install"]
+
+[start]
+cmd = "node server.js"

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Banner Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #fff; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #16213e; padding: 20px; margin-bottom: 30px; }
+        .header h1 { color: #00d4ff; }
+        .logout-btn { float: right; padding: 10px 20px; background: #ff4444; border: none; color: white; cursor: pointer; border-radius: 5px; }
+        .section { background: #16213e; padding: 20px; margin-bottom: 20px; border-radius: 10px; }
+        .section h2 { margin-bottom: 20px; color: #00d4ff; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; background: #0f3460; border: 1px solid #00d4ff; color: white; border-radius: 5px; }
+        .btn { padding: 10px 20px; background: #00d4ff; border: none; color: #1a1a2e; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .btn:hover { background: #00a8cc; }
+        .banner-list { margin-top: 20px; }
+        .banner-item { background: #0f3460; padding: 15px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .banner-preview { width: 150px; height: 80px; object-fit: cover; border-radius: 5px; }
+        .banner-info { flex: 1; margin: 0 20px; }
+        .banner-actions button { margin-left: 10px; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-edit { background: #ffa500; color: white; }
+        .btn-delete { background: #ff4444; color: white; }
+        .btn-toggle { background: #4CAF50; color: white; }
+        .btn-toggle.disabled { background: #666; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .settings-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1><i class="fas fa-cog"></i> Banner Management</h1>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2><i class="fas fa-address-book"></i> Contact Information</h2>
+            <div class="settings-grid">
+                <div class="form-group">
+                    <label><i class="fab fa-facebook"></i> Facebook</label>
+                    <input type="text" id="contactFacebook" placeholder="https://facebook.com/yourpage">
+                </div>
+                <div class="form-group">
+                    <label><i class="fab fa-tiktok"></i> TikTok</label>
+                    <input type="text" id="contactTiktok" placeholder="https://tiktok.com/@yourpage">
+                </div>
+                <div class="form-group">
+                    <label><i class="fab fa-telegram"></i> Telegram</label>
+                    <input type="text" id="contactTelegram" placeholder="https://t.me/yourpage">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-phone"></i> Phone</label>
+                    <input type="text" id="contactPhone" placeholder="+1234567890">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="contactEmail" placeholder="contact@example.com">
+                </div>
+                <div class="form-group">
+                    <label><i class="fab fa-whatsapp"></i> WhatsApp</label>
+                    <input type="text" id="contactWhatsapp" placeholder="+1234567890">
+                </div>
+            </div>
+            <button class="btn" onclick="saveContactSettings()" style="margin-top: 15px;">
+                <i class="fas fa-save"></i> Apply Contact Settings
+            </button>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-plus-circle"></i> Add New Banner</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Upload desktop and mobile banner images. You can edit settings after adding.</p>
+            <form id="bannerForm" enctype="multipart/form-data">
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label>Desktop Image (1200x400px recommended)</label>
+                        <input type="file" name="desktopImage" id="desktopImage" accept="image/*,image/gif" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Image (600x400px recommended)</label>
+                        <input type="file" name="mobileImage" id="mobileImage" accept="image/*,image/gif" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn"><i class="fas fa-upload"></i> Add Banner</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-images"></i> Current Banners</h2>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>Maximum Active Banners (how many can be enabled at once)</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" id="maxBanners" value="3" min="1" max="20" style="flex: 1;">
+                    <button class="btn" onclick="saveMaxBanners()">
+                        <i class="fas fa-save"></i> Apply
+                    </button>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <input type="text" id="searchBanner" placeholder="Search banners..." onkeyup="filterBanners()" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+                <button class="btn" id="viewDesktopBtn" onclick="switchView('desktop')" style="flex: 1;">
+                    <i class="fas fa-desktop"></i> Desktop View
+                </button>
+                <button class="btn" id="viewMobileBtn" onclick="switchView('mobile')" style="flex: 1; background: #666;">
+                    <i class="fas fa-mobile-alt"></i> Mobile View
+                </button>
+            </div>
+            <div id="bannerList" class="banner-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        let banners = [];
+        let settings = { maxBanners: 3 };
+
+        // Check login
+        if (!localStorage.getItem('adminToken')) {
+            window.location.href = 'login.html';
+        }
+
+        let pendingBannerData = null;
+        let currentView = 'desktop';
+        
+        // Display settings helper function
+        function displaySettings(s) {
+            const maxBannersEl = document.getElementById('maxBanners');
+            const facebookEl = document.getElementById('contactFacebook');
+            const tiktokEl = document.getElementById('contactTiktok');
+            const telegramEl = document.getElementById('contactTelegram');
+            const phoneEl = document.getElementById('contactPhone');
+            const emailEl = document.getElementById('contactEmail');
+            const whatsappEl = document.getElementById('contactWhatsapp');
+            
+            if (maxBannersEl) maxBannersEl.value = s.maxBanners || 3;
+            if (facebookEl) facebookEl.value = s.contactFacebook || '';
+            if (tiktokEl) tiktokEl.value = s.contactTiktok || '';
+            if (telegramEl) telegramEl.value = s.contactTelegram || '';
+            if (phoneEl) phoneEl.value = s.contactPhone || '';
+            if (emailEl) emailEl.value = s.contactEmail || '';
+            if (whatsappEl) whatsappEl.value = s.contactWhatsapp || '';
+        }
+
+        // Load settings - SIMPLE & FAST
+        async function loadSettings() {
+            // Load from cache first (instant display)
+            const cached = localStorage.getItem('cachedSettings');
+            if (cached) {
+                try {
+                    settings = JSON.parse(cached);
+                    displaySettings(settings);
+                } catch (e) {}
+            }
+            
+            // Then load from server and update
+            try {
+                const res = await fetch('/api/admin/settings', {
+                    headers: { 'Authorization': localStorage.getItem('adminToken') }
+                });
+                
+                settings = await res.json();
+                localStorage.setItem('cachedSettings', JSON.stringify(settings)); // Cache it
+                displaySettings(settings);
+            } catch (e) {
+                console.error('Error loading settings:', e);
+                if (!cached) {
+                    // Show defaults if no cache
+                    displaySettings({ maxBanners: 3, contactFacebook: '', contactTiktok: '', contactTelegram: '', contactPhone: '', contactEmail: '', contactWhatsapp: '' });
+                }
+            }
+        }
+
+        async function saveContactSettings() {
+            const currentSettings = settings || { maxBanners: 3 };
+            
+            currentSettings.contactFacebook = document.getElementById('contactFacebook').value;
+            currentSettings.contactTiktok = document.getElementById('contactTiktok').value;
+            currentSettings.contactTelegram = document.getElementById('contactTelegram').value;
+            currentSettings.contactPhone = document.getElementById('contactPhone').value;
+            currentSettings.contactEmail = document.getElementById('contactEmail').value;
+            currentSettings.contactWhatsapp = document.getElementById('contactWhatsapp').value;
+            
+            // Update cache immediately
+            localStorage.setItem('cachedSettings', JSON.stringify(currentSettings));
+            
+            try {
+                await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': localStorage.getItem('adminToken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(currentSettings)
+                });
+                alert('Contact settings saved! ✅');
+                await loadSettings();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function saveMaxBanners() {
+            const currentSettings = settings || { maxBanners: 3 };
+            currentSettings.maxBanners = parseInt(document.getElementById('maxBanners').value);
+            
+            // Update cache immediately
+            localStorage.setItem('cachedSettings', JSON.stringify(currentSettings));
+            settings = currentSettings;
+            
+            try {
+                await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': localStorage.getItem('adminToken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(currentSettings)
+                });
+                alert('Maximum banners setting saved! ✅');
+                await loadSettings();
+                await loadBanners();
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('viewDesktopBtn').style.background = view === 'desktop' ? '' : '#666';
+            document.getElementById('viewMobileBtn').style.background = view === 'mobile' ? '' : '#666';
+            renderBanners();
+        }
+
+        function filterBanners() {
+            const search = document.getElementById('searchBanner').value.toLowerCase();
+            const items = document.querySelectorAll('.banner-item');
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(search) ? 'flex' : 'none';
+            });
+        }
+
+        // Load banners - SIMPLE & FAST
+        async function loadBanners() {
+            // Load from cache first (instant display)
+            const cached = localStorage.getItem('cachedBanners');
+            if (cached) {
+                try {
+                    banners = JSON.parse(cached);
+                    renderBanners();
+                } catch (e) {}
+            }
+            
+            // Then load from server and update
+            try {
+                console.log('Loading banners...');
+                const res = await fetch('/api/admin/banners', {
+                    headers: { 'Authorization': localStorage.getItem('adminToken') }
+                });
+                
+                console.log('Response status:', res.status);
+                banners = await res.json();
+                console.log('Loaded banners:', banners);
+                localStorage.setItem('cachedBanners', JSON.stringify(banners)); // Cache it
+                renderBanners();
+            } catch (e) {
+                console.error('Error loading banners:', e);
+                if (!cached) {
+                    document.getElementById('bannerList').innerHTML = '<p style="color: #ff4444;">Error loading banners. Make sure server is running.</p>';
+                }
+            }
+        }
+
+        function renderBanners() {
+            const list = document.getElementById('bannerList');
+            if (!Array.isArray(banners) || banners.length === 0) {
+                list.innerHTML = '<p>No banners yet. Add your first banner above.</p>';
+                return;
+            }
+            const enabledCount = banners.filter(b => b.enabled).length;
+            list.innerHTML = `
+                <div style="margin-bottom: 15px; padding: 10px; background: #0f3460; border-radius: 5px;">
+                    <strong>Active Banners: ${enabledCount} / ${settings.maxBanners}</strong>
+                    ${enabledCount >= settings.maxBanners ? '<span style="color: #ffa500;"> (Maximum reached)</span>' : ''}
+                </div>
+            ` + banners.map((b, i) => `
+                <div class="banner-item" id="banner-${i}">
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <div style="font-size:0.8rem; color:#00d4ff;">${currentView === 'desktop' ? 'Desktop' : 'Mobile'} Preview:</div>
+                        <img src="${currentView === 'desktop' ? b.desktopImage : b.mobileImage}" class="banner-preview" alt="${currentView}" style="width:${currentView === 'desktop' ? '200px' : '120px'}; height:100px; object-fit:cover;">
+                    </div>
+                    <div class="banner-info">
+                        <strong>Banner ${i + 1}</strong><br>
+                        <div id="view-${i}">
+                            Duration: ${b.duration}s | Transition: ${b.transition}<br>
+                            ${b.link ? `Link: ${b.link}` : 'No link'}
+                        </div>
+                        <div id="edit-${i}" style="display:none;">
+                            <input type="text" value="${b.link || ''}" id="link-${i}" placeholder="Link URL" style="width:100%; margin:5px 0; padding:5px; background:#0f3460; border:1px solid #00d4ff; color:white; border-radius:3px;">
+                            <input type="number" value="${b.duration}" id="duration-${i}" min="1" max="30" style="width:48%; margin:5px 1% 5px 0; padding:5px; background:#0f3460; border:1px solid #00d4ff; color:white; border-radius:3px;">
+                            <select id="transition-${i}" style="width:48%; margin:5px 0; padding:5px; background:#0f3460; border:1px solid #00d4ff; color:white; border-radius:3px;">
+                                <option value="fade" ${b.transition === 'fade' ? 'selected' : ''}>Fade</option>
+                                <option value="slide" ${b.transition === 'slide' ? 'selected' : ''}>Slide</option>
+                                <option value="zoom" ${b.transition === 'zoom' ? 'selected' : ''}>Zoom</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="banner-actions">
+                        <button class="btn-edit" id="editBtn-${i}" onclick="editBanner(${i})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn-edit" id="applyBtn-${i}" onclick="applyBanner(${i})" style="display:none; background:#4CAF50;">
+                            <i class="fas fa-check"></i> Apply
+                        </button>
+                        <button class="btn-toggle ${b.enabled ? '' : 'disabled'}" onclick="toggleBanner(${i})">
+                            ${b.enabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                        <button class="btn-delete" onclick="deleteBanner(${i})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Upload banner - show preview first
+        document.getElementById('bannerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const desktopFile = formData.get('desktopImage');
+            const mobileFile = formData.get('mobileImage');
+            
+            if (!desktopFile || !mobileFile) {
+                alert('Please select both desktop and mobile images');
+                return;
+            }
+            
+            // Show preview
+            const desktopURL = URL.createObjectURL(desktopFile);
+            const mobileURL = URL.createObjectURL(mobileFile);
+            
+            document.getElementById('previewDesktop').src = desktopURL;
+            document.getElementById('previewMobile').src = mobileURL;
+            document.getElementById('bannerPreview').style.display = 'block';
+            
+            // Store form data for later
+            pendingBannerData = formData;
+        });
+
+        async function confirmAddBanner() {
+            if (!pendingBannerData) {
+                alert('No banner data to upload');
+                return;
+            }
+            
+            try {
+                console.log('Uploading banner...');
+                const res = await fetch('/api/admin/banners', {
+                    method: 'POST',
+                    headers: { 'Authorization': localStorage.getItem('adminToken') },
+                    body: pendingBannerData
+                });
+                
+                console.log('Upload response status:', res.status);
+                
+                if (res.ok) {
+                    alert('Banner added successfully! ✅');
+                    document.getElementById('bannerForm').reset();
+                    document.getElementById('bannerPreview').style.display = 'none';
+                    pendingBannerData = null;
+                    await loadBanners(); // Refresh and update cache
+                } else {
+                    const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+                    console.error('Upload failed:', errorData);
+                    alert('Upload failed: ' + (errorData.error || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error('Upload error:', e);
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function cancelBanner() {
+            document.getElementById('bannerForm').reset();
+            document.getElementById('bannerPreview').style.display = 'none';
+            pendingBannerData = null;
+        }
+
+        async function toggleBanner(index) {
+            const enabledCount = banners.filter(b => b.enabled).length;
+            if (!banners[index].enabled && enabledCount >= settings.maxBanners) {
+                alert(`Maximum of ${settings.maxBanners} banners can be enabled. Disable another banner first.`);
+                return;
+            }
+            try {
+                // Update locally first (instant)
+                banners[index].enabled = !banners[index].enabled;
+                localStorage.setItem('cachedBanners', JSON.stringify(banners));
+                renderBanners();
+                
+                // Then update server
+                await fetch(`/api/admin/banners/${index}/toggle`, {
+                    method: 'POST',
+                    headers: { 'Authorization': localStorage.getItem('adminToken') }
+                });
+                await loadBanners(); // Refresh from server
+            } catch (e) {
+                alert('Error: ' + e.message);
+                await loadBanners(); // Reload on error
+            }
+        }
+
+        async function deleteBanner(index) {
+            if (!confirm('Delete this banner?')) return;
+            try {
+                // Update locally first (instant)
+                banners.splice(index, 1);
+                localStorage.setItem('cachedBanners', JSON.stringify(banners));
+                renderBanners();
+                
+                // Then update server
+                await fetch(`/api/admin/banners/${index}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': localStorage.getItem('adminToken') }
+                });
+                await loadBanners(); // Refresh from server
+            } catch (e) {
+                alert('Error: ' + e.message);
+                await loadBanners(); // Reload on error
+            }
+        }
+
+        function editBanner(index) {
+            document.getElementById(`view-${index}`).style.display = 'none';
+            document.getElementById(`edit-${index}`).style.display = 'block';
+            document.getElementById(`editBtn-${index}`).style.display = 'none';
+            document.getElementById(`applyBtn-${index}`).style.display = 'inline-block';
+        }
+
+        async function applyBanner(index) {
+            const link = document.getElementById(`link-${index}`).value;
+            const duration = parseInt(document.getElementById(`duration-${index}`).value);
+            const transition = document.getElementById(`transition-${index}`).value;
+
+            try {
+                // Update locally first (instant)
+                banners[index].link = link;
+                banners[index].duration = duration;
+                banners[index].transition = transition;
+                localStorage.setItem('cachedBanners', JSON.stringify(banners));
+                
+                // Then update server
+                await fetch(`/api/admin/banners/${index}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': localStorage.getItem('adminToken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ link, duration, transition })
+                });
+                alert('Banner updated! ✅');
+                await loadBanners(); // Refresh from server
+            } catch (e) {
+                alert('Error: ' + e.message);
+                await loadBanners(); // Reload on error
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'login.html';
+        }
+
+        // Upload banner - show preview first
+        document.getElementById('bannerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const desktopFile = formData.get('desktopImage');
+            const mobileFile = formData.get('mobileImage');
+            
+            if (!desktopFile || !mobileFile) {
+                alert('Please select both desktop and mobile images');
+                return;
+            }
+            
+            // Show preview
+            const desktopURL = URL.createObjectURL(desktopFile);
+            const mobileURL = URL.createObjectURL(mobileFile);
+            
+            document.getElementById('previewDesktop').src = desktopURL;
+            document.getElementById('previewMobile').src = mobileURL;
+            document.getElementById('bannerPreview').style.display = 'block';
+            
+            // Store form data for later
+            pendingBannerData = formData;
+        });
+
+        // Add banner form handler
+        const bannerForm = document.getElementById('bannerForm');
+        if (bannerForm) {
+            bannerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const desktopFile = document.getElementById('desktopImage').files[0];
+                const mobileFile = document.getElementById('mobileImage').files[0];
+                
+                if (!desktopFile || !mobileFile) {
+                    alert('Please select both images');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('desktopImage', desktopFile);
+                formData.append('mobileImage', mobileFile);
+                formData.append('link', '');
+                formData.append('duration', '5');
+                formData.append('transition', 'fade');
+                
+                try {
+                    const res = await fetch('/api/admin/banners', {
+                        method: 'POST',
+                        headers: { 'Authorization': localStorage.getItem('adminToken') },
+                        body: formData
+                    });
+                    
+                    if (res.ok) {
+                        alert('Banner added successfully! Edit settings below.');
+                        bannerForm.reset();
+                        await loadBanners();
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        alert('Upload failed: ' + (err.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            });
+        }
+
+        // Load IMMEDIATELY when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load from cache FIRST (instant!)
+            const cachedSettings = localStorage.getItem('cachedSettings');
+            const cachedBanners = localStorage.getItem('cachedBanners');
+            
+            if (cachedSettings) {
+                try {
+                    settings = JSON.parse(cachedSettings);
+                    displaySettings(settings);
+                    console.log('✅ Loaded settings from cache');
+                } catch (e) {
+                    console.error('Cache error:', e);
+                }
+            }
+            
+            if (cachedBanners) {
+                try {
+                    banners = JSON.parse(cachedBanners);
+                    renderBanners();
+                    console.log('✅ Loaded banners from cache');
+                } catch (e) {
+                    console.error('Cache error:', e);
+                }
+            }
+            
+            // Then load from server (background)
+            setTimeout(() => {
+                loadSettings();
+                loadBanners();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
