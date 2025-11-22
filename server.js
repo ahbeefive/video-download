@@ -83,8 +83,8 @@ if (!fs.existsSync(BANNERS_FILE)) {
 }
 
 // Admin credentials (change these!)
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "admin123";
+const ADMIN_USER = "adminsmey";
+const ADMIN_PASS = "@@@@wrongpassword168";
 const ADMIN_TOKEN = "admin_token_static_12345";
 
 // Cloudinary setup for banner storage (optional - set env vars to enable)
@@ -535,3 +535,4 @@ app.listen(PORT, () => {
 connectDB().catch(() => {
     console.log('ℹ️  Running without database (using file storage)');
 });
+
