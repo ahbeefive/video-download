@@ -7,6 +7,7 @@ const { exec } = require("child_process");
 const execAsync = promisify(exec);
 const multer = require("multer");
 const { connectDB, Settings, Banner } = require("./database");
+const { handleYouTubeDownload, getYouTubeInfo } = require("./youtube-handler");
 
 const app = express();
 app.use(cors());
@@ -244,15 +245,10 @@ app.post("/api/video-info", async (req, res) => {
     console.log("🎬 Platform:", platform);
 
     try {
-        // For YouTube, get title quickly with extra options to bypass restrictions
+        // For YouTube, use enhanced handler
         if (platform === "youtube") {
             try {
-                const cmd = isWindows 
-                    ? `"${YT_DLP}" --no-playlist --get-title --no-check-certificate --user-agent "Mozilla/5.0" "${url}"`
-                    : `${YT_DLP} --no-playlist --get-title --no-check-certificate --user-agent "Mozilla/5.0" "${url}"`;
-                    
-                const { stdout } = await execAsync(cmd, { timeout: 5000 });
-                const title = stdout.trim();
+                const title = await getYouTubeInfo(url);
                 console.log("✅ Title:", title);
 
                 const formats = [
@@ -301,6 +297,38 @@ app.post("/api/download", async (req, res) => {
         
         if (!url) return res.status(400).json({ error: "URL required" });
 
+        // Special handling for YouTube with hybrid approach
+        if (platform === "youtube") {
+            try {
+                const result = await handleYouTubeDownload(url, quality);
+                
+                // If client-side method, return info instead of file
+                if (result.method === "client-side") {
+                    return res.json(result);
+                }
+                
+                // If download successful, send file
+                if (result.success && fs.existsSync(result.path)) {
+                    const ext = quality === "MP3 Audio" ? "mp3" : "mp4";
+                    res.download(result.path, `youtube_video.${ext}`, (err) => {
+                        setTimeout(() => {
+                            if (fs.existsSync(result.path)) fs.unlinkSync(result.path);
+                        }, 5000);
+                        if (err) console.error("❌ Error:", err);
+                        else console.log(`✅ YouTube ${quality} sent via ${result.method}`);
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.error("❌ YouTube download failed:", error.message);
+                return res.status(500).json({ 
+                    error: "YouTube download failed. Try a different video or use TikTok/Facebook.",
+                    suggestion: "YouTube has strict restrictions. Other platforms work better!"
+                });
+            }
+        }
+
+        // For non-YouTube platforms, use original code
         // Get video title for filename
         let cleanTitle = "video";
         try {
