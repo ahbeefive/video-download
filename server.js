@@ -83,8 +83,8 @@ if (!fs.existsSync(BANNERS_FILE)) {
 }
 
 // Admin credentials (change these!)
-const ADMIN_USER = "adminsmey";
-const ADMIN_PASS = "@@@@wrongpassword168";
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "admin123";
 const ADMIN_TOKEN = "admin_token_static_12345";
 
 // Cloudinary setup for banner storage (optional - set env vars to enable)
@@ -244,12 +244,12 @@ app.post("/api/video-info", async (req, res) => {
     console.log("🎬 Platform:", platform);
 
     try {
-        // For YouTube, get title quickly
+        // For YouTube, get title quickly with extra options to bypass restrictions
         if (platform === "youtube") {
             try {
                 const cmd = isWindows 
-                    ? `"${YT_DLP}" --no-playlist --get-title "${url}"`
-                    : `${YT_DLP} --no-playlist --get-title "${url}"`;
+                    ? `"${YT_DLP}" --no-playlist --get-title --no-check-certificate --user-agent "Mozilla/5.0" "${url}"`
+                    : `${YT_DLP} --no-playlist --get-title --no-check-certificate --user-agent "Mozilla/5.0" "${url}"`;
                     
                 const { stdout } = await execAsync(cmd, { timeout: 5000 });
                 const title = stdout.trim();
@@ -321,12 +321,12 @@ app.post("/api/download", async (req, res) => {
         const timestamp = Date.now();
         const fileBase = `${cleanTitle}_${timestamp}`;
 
-        // MP3 Audio Download - Fast extraction
+        // MP3 Audio Download - Fast extraction with YouTube bypass
         if (quality === "MP3 Audio") {
             const outputPath = path.join(DOWNLOAD_DIR, `${fileBase}.mp3`);
             const cmd = isWindows
-                ? `"${YT_DLP}" --no-playlist -f "bestaudio" -x --audio-format mp3 --audio-quality 5 --ffmpeg-location "${FFMPEG}" -o "${outputPath}" "${url}"`
-                : `${YT_DLP} --no-playlist -f "bestaudio" -x --audio-format mp3 --audio-quality 5 -o "${outputPath}" "${url}"`;
+                ? `"${YT_DLP}" --no-playlist -f "bestaudio" -x --audio-format mp3 --audio-quality 5 --no-check-certificate --user-agent "Mozilla/5.0" --ffmpeg-location "${FFMPEG}" -o "${outputPath}" "${url}"`
+                : `${YT_DLP} --no-playlist -f "bestaudio" -x --audio-format mp3 --audio-quality 5 --no-check-certificate --user-agent "Mozilla/5.0" -o "${outputPath}" "${url}"`;
 
             console.log("🎵 Downloading MP3...");
             await execAsync(cmd, { timeout: 180000, maxBuffer: 1024 * 1024 * 1024 });
@@ -360,10 +360,10 @@ app.post("/api/download", async (req, res) => {
             formatStr = "bestvideo[height<=2160][ext=mp4]+bestaudio[ext=m4a]/best[height<=2160][ext=mp4]/best[height<=2160]";
         }
 
-        // Download video directly - FAST (no re-encoding)
+        // Download video directly - FAST with YouTube bypass
         const downloadCmd = isWindows
-            ? `"${YT_DLP}" --no-playlist -f "${formatStr}" --merge-output-format mp4 --ffmpeg-location "${FFMPEG}" -o "${outputPath}" "${url}"`
-            : `${YT_DLP} --no-playlist -f "${formatStr}" --merge-output-format mp4 -o "${outputPath}" "${url}"`;
+            ? `"${YT_DLP}" --no-playlist -f "${formatStr}" --merge-output-format mp4 --no-check-certificate --user-agent "Mozilla/5.0" --ffmpeg-location "${FFMPEG}" -o "${outputPath}" "${url}"`
+            : `${YT_DLP} --no-playlist -f "${formatStr}" --merge-output-format mp4 --no-check-certificate --user-agent "Mozilla/5.0" -o "${outputPath}" "${url}"`;
         
         console.log(`🎥 Downloading ${quality}...`);
         await execAsync(downloadCmd, { timeout: 300000, maxBuffer: 1024 * 1024 * 1024 });
@@ -535,4 +535,3 @@ app.listen(PORT, () => {
 connectDB().catch(() => {
     console.log('ℹ️  Running without database (using file storage)');
 });
-
